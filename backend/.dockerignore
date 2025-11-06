@@ -1,0 +1,12 @@
+.gitignore
+Dockerfile
+
+.vscode/
+.DS_Store
+
+.ruff_cache
+build
+*.egg-info
+
+__pycache__/
+*.pyc

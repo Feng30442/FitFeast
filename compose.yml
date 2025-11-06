@@ -1,0 +1,60 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend
+    entrypoint: /app/entrypoint.sh
+    command: watchfiles "python manage.py runserver 0.0.0.0:8000 --noreload" .
+    volumes:
+      - ./backend:/app
+    ports:
+      - 8000:8000
+    environment:
+      DJANGO_RUNSERVER_HIDE_WARNING: "true"
+    env_file:
+      - ./backend/.env
+    depends_on:
+      pgsql:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    command: npm run dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - 3000:3000
+  pgsql:
+    image: postgres:17-alpine
+    container_name: pgsql
+    volumes:
+      - postgres-data:/var/lib/postgresql/data/
+    env_file:
+      - ./backend/.env
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB -h 127.0.0.1"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 5s
+
+  pgweb:
+    image: sosedoff/pgweb
+    container_name: pgweb
+    ports:
+      - 8081:8081
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - pgsql
+
+volumes:
+  postgres-data:

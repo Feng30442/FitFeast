@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "streetsidesoftware.code-spell-checker",
+    "ms-vscode-remote.remote-wsl",
+    "qcz.text-power-tools",
+    "fill-labs.dependi"
+  ]
+}

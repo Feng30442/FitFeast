@@ -1,0 +1,8 @@
+{
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true
+  },
+  "files.encoding": "utf8",
+  "files.trimTrailingWhitespace": true,
+}
