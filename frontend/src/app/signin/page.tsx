@@ -46,12 +46,12 @@ const Signin = () => {
   return (
     <div className={styles.content}>
       <fieldset className={styles.fieldset}>
-        <legend>サインインを行うユーザ情報を入力</legend>
+        <legend>サイン</legend>
         <div className={styles.form}>
           <span>{errors?.message}</span>
           <p>
             <label>
-              ユーザー名:
+              123
               <Input
                 name="username"
                 value={signinInfo.username}
@@ -62,7 +62,7 @@ const Signin = () => {
           </p>
           <p>
             <label>
-              パスワード:
+              
               <Input
                 name="password"
                 value={signinInfo.password}
