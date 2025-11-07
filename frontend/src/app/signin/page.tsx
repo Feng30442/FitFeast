@@ -77,7 +77,7 @@ const Signin = () => {
         </Button>
         <p>
           <span>
-            アカウントをお持ちでない方は
+            アカウント
             <Link href="/signup">こちらからサインアップ</Link>
           </span>
         </p>
