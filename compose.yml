@@ -9,7 +9,7 @@ services:
     volumes:
       - ./backend:/app
     ports:
-      - 8000:8000
+      - "8000:8000"
     environment:
       DJANGO_RUNSERVER_HIDE_WARNING: "true"
     env_file:
@@ -24,12 +24,17 @@ services:
       dockerfile: Dockerfile
     container_name: frontend
     command: npm run dev
+    environment: # ← mapping 形式（キー: 値）
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: "100"
     volumes:
       - ./frontend:/app
       - /app/node_modules
-      - /app/.next
+      # - /app/.next   # ←基本は不要なので外す
     ports:
-      - 3000:3000
+      - "3000:3000" # ← list 形式（"-" で始める）
+
   pgsql:
     image: postgres:17-alpine
     container_name: pgsql
@@ -38,9 +43,13 @@ services:
     env_file:
       - ./backend/.env
     ports:
-      - 5432:5432
+      - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB -h 127.0.0.1"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB -h 127.0.0.1",
+        ]
       interval: 5s
       timeout: 5s
       retries: 15
@@ -50,7 +59,7 @@ services:
     image: sosedoff/pgweb
     container_name: pgweb
     ports:
-      - 8081:8081
+      - "8081:8081"
     env_file:
       - ./backend/.env
     depends_on:

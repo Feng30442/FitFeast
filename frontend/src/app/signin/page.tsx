@@ -46,12 +46,12 @@ const Signin = () => {
   return (
     <div className={styles.content}>
       <fieldset className={styles.fieldset}>
-        <legend>サイン</legend>
+        <legend>サインい</legend>
         <div className={styles.form}>
           <span>{errors?.message}</span>
           <p>
             <label>
-              123
+              12345890
               <Input
                 name="username"
                 value={signinInfo.username}
@@ -62,7 +62,6 @@ const Signin = () => {
           </p>
           <p>
             <label>
-              
               <Input
                 name="password"
                 value={signinInfo.password}
