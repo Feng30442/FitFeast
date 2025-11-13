@@ -1,88 +1,66 @@
 "use client";
 
-import { Button } from "@/app/sample/_components/Button/Button";
-import { Input } from "@/app/sample/_components/Input/Input";
-import styles from "@/app/sample/page.module.css";
-import { authSignin } from "@/lib/api/auth/signin";
-import { authUser } from "@/lib/api/auth/user";
-import { SigninErrorResponse } from "@/types/api/auth";
+import React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import React, { useCallback, useState } from "react";
+import styles from "./page.module.css";
 
-const Signin = () => {
-  const router = useRouter();
+export default function Dashboard() {
+  // 模拟假数据
+  const goals = { cal: 2000, carb: 260, prot: 100, fat: 55 };
+  const today = { cal: 1680, carb: 220, prot: 86, fat: 42 };
+  const todayDate = new Date().toISOString().slice(0, 10);
 
-  const [signinInfo, setSigninInfo] = useState({
-    username: "",
-    password: "",
-  });
-
-  const [errors, setErrors] = useState<SigninErrorResponse>();
-
-  const handleOnChangeSignin = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setSigninInfo((prev) => ({ ...prev, [name]: value }));
-  }, []);
-
-  const handleSignin = useCallback(async () => {
-    setErrors(undefined);
-    const signinResult = await authSignin(signinInfo);
-    console.log(signinResult);
-    if (!signinResult.success) {
-      setErrors({ message: signinResult.data.message });
-      return signinResult.data?.message;
-    }
-    const userResult = await authUser();
-    console.log(userResult);
-
-    if (!userResult.success) {
-      return alert(userResult.data?.message);
-    }
-
-    router.push("/home");
-  }, [signinInfo, router]);
+  function pct(v: number, max: number) {
+    return Math.round((v / max) * 100);
+  }
 
   return (
-    <div className={styles.content}>
-      <fieldset className={styles.fieldset}>
-        <legend>サインい</legend>
-        <div className={styles.form}>
-          <span>{errors?.message}</span>
-          <p>
-            <label>
-              1234589
-              <Input
-                name="username"
-                value={signinInfo.username}
-                onChange={handleOnChangeSignin}
-                type="text"
-              />
-            </label>
-          </p>
-          <p>
-            <label>
-              <Input
-                name="password"
-                value={signinInfo.password}
-                onChange={handleOnChangeSignin}
-                type="password"
-              />
-            </label>
-          </p>
-        </div>
-        <Button type="button" className={styles.button} onClick={handleSignin}>
-          サインイン
-        </Button>
-        <p>
-          <span>
-            アカウント
-            <Link href="/signup">こちらからサインアップ</Link>
-          </span>
-        </p>
-      </fieldset>
-    </div>
-  );
-};
+    <main className={styles.container}>
+      <header className={styles.header}>
+        <h1>FitFeast ダッシュボード</h1>
+        <p>今日 ({todayDate}) の摂取と目標</p>
+      </header>
 
-export default Signin;
+      <section className={styles.grid}>
+        <div className={styles.card}>
+          <h3>カロリー</h3>
+          <p>{today.cal} / {goals.cal} kcal</p>
+          <div className={styles.progress}>
+            <div style={{ width: `${pct(today.cal, goals.cal)}%` }}></div>
+          </div>
+        </div>
+
+        <div className={styles.card}>
+          <h3>炭水化物</h3>
+          <p>{today.carb} / {goals.carb} g</p>
+          <div className={styles.progress}>
+            <div style={{ width: `${pct(today.carb, goals.carb)}%` }}></div>
+          </div>
+        </div>
+
+        <div className={styles.card}>
+          <h3>たんぱく質</h3>
+          <p>{today.prot} / {goals.prot} g</p>
+          <div className={styles.progress}>
+            <div style={{ width: `${pct(today.prot, goals.prot)}%` }}></div>
+          </div>
+        </div>
+
+        <div className={styles.card}>
+          <h3>脂質</h3>
+          <p>{today.fat} / {goals.fat} g</p>
+          <div className={styles.progress}>
+            <div style={{ width: `${pct(today.fat, goals.fat)}%` }}></div>
+          </div>
+        </div>
+      </section>
+
+      <nav className={styles.nav}>
+        <Link className={styles.btn} href="#">🍱 食事を記録</Link>
+        <Link className={styles.btn} href="#">📊 分析</Link>
+        <Link className={styles.btn} href="#">🎯 目標設定</Link>
+        <Link className={styles.btn} href="#">🙍‍♂️ プロフィール</Link>
+      </nav>
+    </main>
+  );
+}
