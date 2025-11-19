@@ -1,39 +1,28 @@
-from django.core.validators import RegexValidator
-from rest_framework import serializers, validators
-
-from .models import User
-
-alphanumeric_validator = RegexValidator(r"^[a-zA-Z0-9]*$", "英数字のみ使用できます。")
+from django.contrib.auth.models import User
+from rest_framework import serializers
 
 
-class UserSerializer(serializers.ModelSerializer):
+class SignupSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, min_length=6)
+    email = serializers.EmailField()
+
     class Meta:
         model = User
-        fields = ("username", "password")
-
-    username = serializers.CharField(
-        required=True,
-        max_length=20,
-        validators=[
-            validators.UniqueValidator(
-                queryset=User.objects.all(), message="このユーザー名はすでに使用されています。"
-            ),
-            alphanumeric_validator,
-        ],
-    )
-    password = serializers.CharField(
-        write_only=True,
-        required=True,
-        min_length=8,
-        max_length=20,
-        validators=[alphanumeric_validator],
-        style={"input_type": "password"},
-        help_text="8文字以上20文字以内の英数字で入力してください。",
-    )
+        fields = ("email", "password")
 
     def create(self, validated_data):
+        email = validated_data["email"]
+        password = validated_data["password"]
+        username = email  # User モデルは username 必須 → email をそのまま使う
+
         user = User.objects.create_user(
-            username=validated_data["username"],
-            password=validated_data["password"],
+            username=username,
+            email=email,
+            password=password,
         )
         return user
+
+
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField()
