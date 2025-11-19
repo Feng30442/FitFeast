@@ -1,0 +1,194 @@
+/* src/app/home/page.module.css */
+
+.wrapper {
+  min-height: 100vh;
+  background: #f5f5f2;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ヘッダー */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.logoArea {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logoCircle {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background-color: #006c49;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logoLeaf {
+  font-size: 22px;
+}
+
+.appName {
+  font-size: 18px;
+  font-weight: 700;
+  color: #006c49;
+  letter-spacing: 0.08em;
+}
+
+.userArea {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.userName {
+  font-size: 13px;
+  color: #374151;
+}
+
+.logoutButton {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* メインエリア */
+.main {
+  padding: 24px;
+  max-width: 960px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* サマリーセクション */
+.summarySection {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.summaryCard {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 16px 18px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
+}
+
+.summaryLabel {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
+.summaryValue {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.summarySub {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.summaryMessage {
+  font-size: 13px;
+  color: #374151;
+  line-height: 1.6;
+}
+
+/* 食事一覧セクション */
+.mealsSection {
+  margin-top: 8px;
+}
+
+.mealsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.addButton {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: none;
+  background-color: #006c49;
+  color: #ffffff;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.addButton:hover {
+  background-color: #00533a;
+}
+
+.mealsList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mealCard {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mealInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.mealName {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.mealTime {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.mealMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mealTag {
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background-color: #e5f6ee;
+  color: #047857;
+}
+
+.mealCalorie {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+}
