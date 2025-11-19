@@ -7,9 +7,8 @@ import styles from "../auth.module.css";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -17,29 +16,25 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:8000/api/auth/login/", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/api/auth/login/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        // backend が email / password を受け取る想定
         body: JSON.stringify({ email, password }),
+        credentials: "include", // Cookie を受け取る
       });
 
-      const data = await res.json();
-
       if (!res.ok) {
-        // backend で {"detail": "..."} を返している場合を想定
-        setMessage(data.detail ?? "ログインに失敗しました");
+        const data = await res.json().catch(() => null);
+        setMessage(data?.detail ?? "メールアドレスまたはパスワードが正しくありません");
         return;
       }
 
-      // token 保存（简易版：localStorage）
-      localStorage.setItem("token", data.token);
-
-      setMessage("ログイン成功！");
-      // TODO: ここでホーム画面などへ遷移
-      // window.location.href = "/"; など
+      // ログイン成功 → /home へ
+      window.location.href = "/home";
     } catch (err) {
       console.error(err);
-      setMessage("ネットワークエラーが発生しました");
+      setMessage("サーバーへの接続に失敗しました");
     } finally {
       setLoading(false);
     }
@@ -48,34 +43,37 @@ export default function LoginPage() {
   return (
     <div className={styles.wrapper}>
       <div className={styles.card}>
+        {/* ロゴ部分 */}
+        <div className={styles.logoCircle}>
+          <span className={styles.logoLeaf}>🍃</span>
+        </div>
+        <div className={styles.appName}>FITFEAST</div>
+
+        {/* タイトル */}
         <h1 className={styles.title}>ログイン</h1>
-        <p className={styles.description}>
-          登録済みのメールアドレスとパスワードを入力してください。
-        </p>
+        <p className={styles.description}>登録済みのメールアドレスとパスワードを入力してください</p>
 
+        {/* フォーム */}
         <form onSubmit={handleSubmit} className={styles.form}>
-          <div>
-            <div className={styles.label}>メールアドレス</div>
-            <input
-              type="email"
-              className={styles.input}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="example@mail.com"
-              required
-            />
-          </div>
+          <input
+            type="email"
+            className={styles.input}
+            placeholder="メールアドレス"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
 
-          <div>
-            <div className={styles.label}>パスワード</div>
+          <div className={styles.passwordWrapper}>
             <input
               type="password"
               className={styles.input}
+              placeholder="パスワード"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="8文字以上"
               required
             />
+            <span className={styles.passwordHint}>8文字以上</span>
           </div>
 
           <button type="submit" className={styles.button} disabled={loading}>
@@ -85,8 +83,10 @@ export default function LoginPage() {
 
         {message && <div className={styles.message}>{message}</div>}
 
-        <div className={styles.linkRow}>
-          アカウントをお持ちでないですか？{" "}
+        {/* 新規登録リンク */}
+        <div className={styles.footerText}>
+          アカウントをお持ちでないですか？
+          <br />
           <Link href="/auth/signup" className={styles.link}>
             新規登録はこちら
           </Link>
