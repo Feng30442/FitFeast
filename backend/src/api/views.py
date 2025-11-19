@@ -1,88 +1,81 @@
-from django.conf import settings
-from rest_framework import status
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from django.contrib.auth import authenticate
+from django.contrib.auth.models import User
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import UserSerializer
-
-
-class GetUserView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        username = request.user.username
-
-        return Response({"username": username})
+from .serializers import SignupSerializer, LoginSerializer
 
 
-class SignInView(TokenObtainPairView):
-    """
-    ログインしてアクセストークンとリフレッシュトークンを
-    HttpOnly Cookieにセットする
-    """
+def set_jwt_cookies(response, refresh: RefreshToken):
+    """JWT を Cookie にセット（Next.js middleware が読む）"""
+    access_token = str(refresh.access_token)
+    refresh_token = str(refresh)
 
-    permission_classes = [AllowAny]
+    response.set_cookie(
+        "access_token",
+        access_token,
+        httponly=True,
+        samesite="Lax",
+        secure=False,
+        path="/",
+    )
+    response.set_cookie(
+        "refresh_token",
+        refresh_token,
+        httponly=True,
+        samesite="Lax",
+        secure=False,
+        path="/",
+    )
+    return response
 
-    def post(self, request, *args, **kwargs):
-        try:
-            response = super().post(request, *args, **kwargs)
-            if response.status_code == 200:
-                access_token = response.data.get("access")
-                refresh_token = response.data.get("refresh")
 
-                del response.data["access"]
-                del response.data["refresh"]
-                response.data["message"] = "ログインに成功しました。"
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def signup(request):
+    """新規登録 API"""
+    serializer = SignupSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-                response.set_cookie(
-                    key=settings.SIMPLE_JWT["AUTH_COOKIE"],
-                    value=access_token,
-                    httponly=True,
-                    secure=settings.SIMPLE_JWT["AUTH_COOKIE_SECURE"],
-                    samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],
-                )
-                response.set_cookie(
-                    key=settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"],
-                    value=refresh_token,
-                    httponly=True,
-                    secure=settings.SIMPLE_JWT["AUTH_COOKIE_SECURE"],
-                    samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],
-                )
-                return response
-        except Exception:
-            pass
+    user = serializer.save()
 
+    refresh = RefreshToken.for_user(user)
+    res = Response({"message": "signup success"}, status=201)
+    return set_jwt_cookies(res, refresh)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def login(request):
+    """ログイン API"""
+    serializer = LoginSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=400)
+
+    email = serializer.validated_data["email"]
+    password = serializer.validated_data["password"]
+
+    # username は email を使っている
+    user = authenticate(username=email, password=password)
+    if not user:
         return Response(
-            {"message": "ユーザー名とパスワードが一致しません"},
-            status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            {"detail": "メールアドレスまたはパスワードが違います"},
+            status=400,
         )
 
-
-class SignOutView(APIView):
-    """
-    ログアウトしてCookieを削除する
-    """
-
-    permission_classes = [AllowAny]
-
-    def delete(self, *args, **kwargs):
-        response = Response(status=status.HTTP_204_NO_CONTENT)
-        response.delete_cookie(settings.SIMPLE_JWT["AUTH_COOKIE"])
-        response.delete_cookie(settings.SIMPLE_JWT["AUTH_COOKIE_REFRESH"])
-        return response
+    refresh = RefreshToken.for_user(user)
+    res = Response({"message": "login success"}, status=200)
+    return set_jwt_cookies(res, refresh)
 
 
-class SignUpView(APIView):
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(
-                {"message": "ユーザー登録が成功しました。"}, status=status.HTTP_201_CREATED
-            )
-
-        return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+@api_view(["POST"])
+def logout(request):
+    """ログアウト API（Cookie 削除）"""
+    res = Response({"message": "logout success"}, status=200)
+    res.delete_cookie("access_token")
+    res.delete_cookie("refresh_token")
+    return res
