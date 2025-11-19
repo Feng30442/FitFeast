@@ -1,15 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import { FormEvent, useState } from "react";
+import Link from "next/link";
 import styles from "../auth.module.css";
 
 export default function SignUpPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -17,35 +16,32 @@ export default function SignUpPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:8000/api/auth/register/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await res.json();
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE}/api/auth/signup/`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+          credentials: "include",
+        },
+      );
 
       if (!res.ok) {
-        // serializer のエラーなど {"email": [...], "password": [...]} を想定
-        if (data.email?.[0]) {
+        const data = await res.json().catch(() => null);
+        // Django 側が {"email": ["すでに登録されています"]} を返すかもしれない
+        if (data?.email?.[0]) {
           setMessage(String(data.email[0]));
-        } else if (data.password?.[0]) {
-          setMessage(String(data.password[0]));
         } else {
           setMessage("登録に失敗しました");
         }
         return;
       }
 
-      // token 保存
-      localStorage.setItem("token", data.token);
-
-      setMessage("登録が完了しました！");
-      // TODO: 登録後にログインページ or ホームに飛ばす
-      // window.location.href = "/auth/login"; など
+      // 登録成功 → そのままログイン状態として /home へ
+      window.location.href = "/home";
     } catch (err) {
       console.error(err);
-      setMessage("ネットワークエラーが発生しました");
+      setMessage("サーバーへの接続に失敗しました");
     } finally {
       setLoading(false);
     }
@@ -54,34 +50,36 @@ export default function SignUpPage() {
   return (
     <div className={styles.wrapper}>
       <div className={styles.card}>
+        <div className={styles.logoCircle}>
+          <span className={styles.logoLeaf}>🍃</span>
+        </div>
+        <div className={styles.appName}>FITFEAST</div>
+
         <h1 className={styles.title}>新規登録</h1>
         <p className={styles.description}>
           メールアドレスとパスワードを入力してアカウントを作成します。
         </p>
 
         <form onSubmit={handleSubmit} className={styles.form}>
-          <div>
-            <div className={styles.label}>メールアドレス</div>
-            <input
-              type="email"
-              className={styles.input}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="example@mail.com"
-              required
-            />
-          </div>
+          <input
+            type="email"
+            className={styles.input}
+            placeholder="メールアドレス"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
 
-          <div>
-            <div className={styles.label}>パスワード</div>
+          <div className={styles.passwordWrapper}>
             <input
               type="password"
               className={styles.input}
+              placeholder="パスワード"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="8文字以上"
               required
             />
+            <span className={styles.passwordHint}>6文字以上</span>
           </div>
 
           <button type="submit" className={styles.button} disabled={loading}>
@@ -91,8 +89,9 @@ export default function SignUpPage() {
 
         {message && <div className={styles.message}>{message}</div>}
 
-        <div className={styles.linkRow}>
-          すでにアカウントをお持ちですか？{" "}
+        <div className={styles.footerText}>
+          すでにアカウントをお持ちですか？
+          <br />
           <Link href="/auth/login" className={styles.link}>
             ログインはこちら
           </Link>
