@@ -10,21 +10,21 @@ export default function SignUpPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    setMessage(null);
-    setLoading(true);
+async function handleSubmit(e: FormEvent) {
+  e.preventDefault();
+  setMessage(null);
+  setLoading(true);
 
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE}/api/auth/signup/`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-          credentials: "include",
-        },
-      );
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE}/api/auth/signup/`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+        credentials: "include",
+      },
+    );
 
       if (!res.ok) {
         const data = await res.json().catch(() => null);

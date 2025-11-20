@@ -24,7 +24,9 @@ echo "Applying database migrations..."
 python manage.py makemigrations api
 python manage.py migrate
 
-echo "Creating admin user..."
-python manage.py create_admin
+# 管理ユーザー自動作成は今は使わない
+# echo "Creating admin user..."
+# python manage.py create_admin
 
+# Django 開始
 exec "$@"

@@ -1,5 +1,5 @@
 from django.contrib.auth import authenticate
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -8,6 +8,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .serializers import SignupSerializer, LoginSerializer
 
+User = get_user_model()
 
 def set_jwt_cookies(response, refresh: RefreshToken):
     """JWT を Cookie にセット（Next.js middleware が読む）"""

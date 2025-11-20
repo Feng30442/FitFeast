@@ -1,5 +1,5 @@
 // src/app/home/page.tsx
-import styles from "./page.module.css";
+import styles from "./home.module.css";
 
 type Meal = {
   id: number;
