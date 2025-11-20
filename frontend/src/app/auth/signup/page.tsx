@@ -1,7 +1,7 @@
 "use client";
 
-import { FormEvent, useState } from "react";
 import Link from "next/link";
+import { FormEvent, useState } from "react";
 import styles from "../auth.module.css";
 
 export default function SignUpPage() {
@@ -10,35 +10,32 @@ export default function SignUpPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-async function handleSubmit(e: FormEvent) {
-  e.preventDefault();
-  setMessage(null);
-  setLoading(true);
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setMessage(null);
+    setLoading(true);
 
-  try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE}/api/auth/signup/`,
-      {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/api/auth/signup/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
         credentials: "include",
-      },
-    );
+      });
 
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        // Django 側が {"email": ["すでに登録されています"]} を返すかもしれない
-        if (data?.email?.[0]) {
-          setMessage(String(data.email[0]));
-        } else {
-          setMessage("登録に失敗しました");
-        }
+
+        // バリデーションエラーを優先的に拾う
+        const msg = data?.email?.[0] ?? data?.password?.[0] ?? data?.detail ?? "登録に失敗しました";
+
+        setMessage(String(msg));
         return;
       }
 
-      // 登録成功 → そのままログイン状態として /home へ
-      window.location.href = "/home";
+      // 新規登録成功 → ログインページへ
+      setMessage("アカウントを作成しました。ログインしてください。");
+      window.location.href = "/auth/login";
     } catch (err) {
       console.error(err);
       setMessage("サーバーへの接続に失敗しました");
@@ -50,16 +47,19 @@ async function handleSubmit(e: FormEvent) {
   return (
     <div className={styles.wrapper}>
       <div className={styles.card}>
+        {/* ロゴ */}
         <div className={styles.logoCircle}>
           <span className={styles.logoLeaf}>🍃</span>
         </div>
         <div className={styles.appName}>FITFEAST</div>
 
+        {/* タイトル */}
         <h1 className={styles.title}>新規登録</h1>
         <p className={styles.description}>
           メールアドレスとパスワードを入力してアカウントを作成します。
         </p>
 
+        {/* フォーム */}
         <form onSubmit={handleSubmit} className={styles.form}>
           <input
             type="email"
@@ -87,8 +87,10 @@ async function handleSubmit(e: FormEvent) {
           </button>
         </form>
 
+        {/* メッセージ表示 */}
         {message && <div className={styles.message}>{message}</div>}
 
+        {/* フッターリンク */}
         <div className={styles.footerText}>
           すでにアカウントをお持ちですか？
           <br />

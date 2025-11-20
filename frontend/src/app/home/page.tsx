@@ -1,4 +1,6 @@
-// src/app/home/page.tsx
+"use client";
+
+import { useRouter } from "next/navigation";
 import styles from "./home.module.css";
 
 type Meal = {
@@ -34,6 +36,26 @@ const dummyMeals: Meal[] = [
 ];
 
 export default function HomePage() {
+  const router = useRouter();
+
+  async function handleLogout() {
+    try {
+      // Django のログアウト API を呼ぶ（Cookie を削除してくれる）
+      await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE}/api/auth/logout/`,
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
+    } catch (e) {
+      console.error("logout error", e);
+    } finally {
+      // ログインページへ遷移
+      router.push("/auth/login");
+    }
+  }
+
   const todayTotal = dummyMeals.reduce((sum, m) => sum + m.calorie, 0);
   const target = 1800;
   const remain = target - todayTotal;
@@ -51,7 +73,14 @@ export default function HomePage() {
 
         <div className={styles.userArea}>
           <span className={styles.userName}>こんにちは、ユーザーさん</span>
-          <button className={styles.logoutButton}>ログアウト</button>
+
+          {/*  ログアウトボタンに処理を追加 */}
+          <button
+            className={styles.logoutButton}
+            onClick={handleLogout}
+          >
+            ログアウト
+          </button>
         </div>
       </header>
 

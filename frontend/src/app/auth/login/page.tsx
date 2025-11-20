@@ -19,18 +19,19 @@ export default function LoginPage() {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/api/auth/login/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // backend が email / password を受け取る想定
         body: JSON.stringify({ email, password }),
-        credentials: "include", // Cookie を受け取る
+        credentials: "include", // ← Cookie に access_token / refresh_token を保存
       });
 
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        setMessage(data?.detail ?? "メールアドレスまたはパスワードが正しくありません");
+        const msg =
+          data?.detail ?? data?.email?.[0] ?? data?.password?.[0] ?? "ログインに失敗しました";
+        setMessage(msg);
         return;
       }
 
-      // ログイン成功 → /home へ
+      // ログイン成功 → ホームページへ移動
       window.location.href = "/home";
     } catch (err) {
       console.error(err);
@@ -43,17 +44,14 @@ export default function LoginPage() {
   return (
     <div className={styles.wrapper}>
       <div className={styles.card}>
-        {/* ロゴ部分 */}
         <div className={styles.logoCircle}>
           <span className={styles.logoLeaf}>🍃</span>
         </div>
         <div className={styles.appName}>FITFEAST</div>
 
-        {/* タイトル */}
         <h1 className={styles.title}>ログイン</h1>
         <p className={styles.description}>登録済みのメールアドレスとパスワードを入力してください</p>
 
-        {/* フォーム */}
         <form onSubmit={handleSubmit} className={styles.form}>
           <input
             type="email"
@@ -64,17 +62,14 @@ export default function LoginPage() {
             required
           />
 
-          <div className={styles.passwordWrapper}>
-            <input
-              type="password"
-              className={styles.input}
-              placeholder="パスワード"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-            <span className={styles.passwordHint}>8文字以上</span>
-          </div>
+          <input
+            type="password"
+            className={styles.input}
+            placeholder="パスワード"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
 
           <button type="submit" className={styles.button} disabled={loading}>
             {loading ? "送信中..." : "ログイン"}
@@ -83,7 +78,6 @@ export default function LoginPage() {
 
         {message && <div className={styles.message}>{message}</div>}
 
-        {/* 新規登録リンク */}
         <div className={styles.footerText}>
           アカウントをお持ちでないですか？
           <br />
