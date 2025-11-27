@@ -192,3 +192,12 @@
   font-weight: 600;
   color: #111827;
 }
+
+.emptyMessage {
+  padding: 16px 12px;
+  font-size: 13px;
+  color: #9ca3af;
+  background: #111827;
+  border-radius: 12px;
+  border: 1px dashed #374151;
+}

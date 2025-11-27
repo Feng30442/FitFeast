@@ -10,6 +10,9 @@ JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
 
 DEBUG = True
 
+TIME_ZONE = "Asia/Tokyo"
+USE_TZ = True  # True のままでOK
+
 ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
@@ -81,6 +84,11 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+# Next.js (localhost:3000) からの Cookie ベース認証を許可するための設定
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+]
 
 # DB 設定（PostgreSQL）
 DATABASES = {

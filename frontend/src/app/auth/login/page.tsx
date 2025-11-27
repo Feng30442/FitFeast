@@ -1,45 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
+import React, { useState } from "react";
 import styles from "../auth.module.css";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  async function handleSubmit(e: FormEvent) {
+  const [message] = useState<string | null>(null);
+  const [loading] = useState(false);
+  const router = useRouter();
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setMessage(null);
-    setLoading(true);
 
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/api/auth/login/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-        credentials: "include", // ← Cookie に access_token / refresh_token を保存
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        const msg =
-          data?.detail ?? data?.email?.[0] ?? data?.password?.[0] ?? "ログインに失敗しました";
-        setMessage(msg);
-        return;
-      }
-
-      // ログイン成功 → ホームページへ移動
-      window.location.href = "/home";
-    } catch (err) {
-      console.error(err);
-      setMessage("サーバーへの接続に失敗しました");
-    } finally {
-      setLoading(false);
-    }
-  }
+    // 開発中はサーバーに投げず、そのままホームへ遷移するだけにする
+    // もし簡単なバリデーションをしたければここでチェックしてもOK
+    router.push("/home");
+  };
 
   return (
     <div className={styles.wrapper}>

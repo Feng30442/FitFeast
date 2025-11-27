@@ -1,8 +1,10 @@
 from django.urls import path
-from . import views
+from .views import MealCreateView, MealTodayListView
 
 urlpatterns = [
-    path("auth/signup/", views.signup, name="signup"),
-    path("auth/login/", views.login, name="login"),
-    path("auth/logout/", views.logout, name="logout"),
+    # 認証系は今は使わないので、追加していなければ何も書かなくてOK
+    # auth の行を入れるなら、実際に views にあるものだけを書くこと
+
+    path("meals/", MealCreateView.as_view(), name="meal-create"),
+    path("meals/today/", MealTodayListView.as_view(), name="meal-today-list"),
 ]
