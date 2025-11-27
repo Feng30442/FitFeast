@@ -201,3 +201,58 @@
   border-radius: 12px;
   border: 1px dashed #374151;
 }
+
+/* 直近1週間サマリ */
+.weeklySection {
+  margin-top: 32px;
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 16px;
+}
+
+.weeklyChart {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  height: 180px;
+  margin-top: 12px;
+}
+
+.weeklyBarItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.weeklyBarOuter {
+  width: 28px;
+  flex: 1;
+  border-radius: 999px;
+  background: #f3f4f6;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.weeklyBarInner {
+  width: 100%;
+  background: linear-gradient(180deg, #22c55e, #16a34a);
+  border-radius: 999px 999px 0 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.weeklyBarValue {
+  font-size: 10px;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+
+.weeklyBarLabel {
+  margin-top: 6px;
+  font-size: 11px;
+  color: #6b7280;
+}

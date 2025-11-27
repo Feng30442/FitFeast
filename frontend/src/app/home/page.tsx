@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import styles from "./home.module.css";
 
 //  API から返ってくる形に合わせた型
@@ -13,6 +13,11 @@ type Meal = {
   tag: string;
 };
 
+type WeeklySummaryItem = {
+  date: string; // "2025-11-27"
+  totalCalorie: number;
+};
+
 export default function HomePage() {
   const router = useRouter();
 
@@ -21,31 +26,18 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // 🔹 追加：選択中の日付（入力用の "YYYY-MM-DD"）
+  const [selectedDate, setSelectedDate] = useState("");
+
+  // 🔹 追加：1週間のサマリ
+  const [weeklySummary, setWeeklySummary] = useState<WeeklySummaryItem[]>([]);
+
   function handleLogout() {
     // いまはフロント側だけでログアウト
     router.push("/auth/login");
   }
 
-  // 🔹 初回マウント時に今日の食事を取得
-  useEffect(() => {
-    const fetchMeals = async () => {
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/api/meals/today/`);
-        if (!res.ok) {
-          throw new Error("API error");
-        }
-        const data: Meal[] = await res.json();
-        setMeals(data);
-      } catch (e) {
-        console.error(e);
-        setError("今日の食事データを取得できませんでした。");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMeals();
-  }, []);
+  // (初期データ取得はマウント時の別 useEffect で行う)
 
   // 🔹 今日の合計 / 残り
   const todayTotal = meals.reduce((sum, m) => sum + m.calorie, 0);
@@ -63,6 +55,15 @@ export default function HomePage() {
       weekday: "short",
     });
     setTodayLabel(label);
+    // 初期の選択日を今日にしておく（Hydration 対策で useEffect 内で決める）
+    const todayStr = toDateInputValue(now);
+    setSelectedDate(todayStr);
+    // 今の日時（表示用）をセット
+    setNowDateTime(formatDateTime(now.toISOString()));
+
+    // 初回マウント時に選択日に合わせて食事を取得し、週次サマリも取得
+    fetchMealsByDate(todayStr);
+    fetchWeeklySummary();
   }, []);
 
   // eaten_at を「HH:MM 朝食」みたいな表示に変換したい場合のヘルパー
@@ -85,6 +86,51 @@ export default function HomePage() {
       minute: "2-digit",
     });
   }
+
+  // input[type=date] 用 "YYYY-MM-DD" 文字列を作る
+  const toDateInputValue = (d: Date) => d.toISOString().slice(0, 10);
+
+  // 🔹 現在の日時表示（例: "11/27(木) 08:53"）
+  const [nowDateTime, setNowDateTime] = useState("");
+
+  // 選択日で食事を取得するヘルパー
+  async function fetchMealsByDate(dateStr: string) {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE}/api/meals/by-date/?date=${dateStr}`,
+      );
+      if (!res.ok) throw new Error("API error");
+      const data: Meal[] = await res.json();
+      setMeals(data);
+    } catch (e) {
+      console.error(e);
+      setError("食事データを取得できませんでした。");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // 週次サマリ取得
+  async function fetchWeeklySummary() {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/api/meals/weekly-summary/`);
+      if (!res.ok) throw new Error("API error");
+      const data: WeeklySummaryItem[] = await res.json();
+      setWeeklySummary(data);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSelectedDate(value);
+    if (value) {
+      fetchMealsByDate(value);
+    }
+  };
 
   return (
     <div className={styles.wrapper}>
@@ -109,8 +155,11 @@ export default function HomePage() {
       <main className={styles.main}>
         {/* 日付表示 */}
         <div className={styles.dateRow}>
-          <span className={styles.dateLabel}>今日</span>
-          <span className={styles.dateValue}>{todayLabel}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span className={styles.dateLabel}>今日</span>
+            <span className={styles.dateValue}>{todayLabel}</span>
+            
+          </div>
         </div>
 
         {/* 上段：サマリー */}
@@ -139,24 +188,68 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* 下段：食事一覧 */}
+        <section className={styles.weeklySection}>
+          <h2 className={styles.sectionTitle}>直近1週間の摂取カロリー</h2>
+
+          <div className={styles.weeklyChart}>
+            {weeklySummary.map((item) => {
+              const d = new Date(item.date);
+              const label = d.toLocaleDateString("ja-JP", {
+                month: "2-digit",
+                day: "2-digit",
+              });
+
+              // 目標 1800kcal を 100% としたバーの高さ（超えたら100%で頭打ち）
+              const ratio = Math.min(item.totalCalorie / 1800, 1);
+              const height = `${ratio * 100}%`;
+
+              return (
+                <div key={item.date} className={styles.weeklyBarItem}>
+                  <div className={styles.weeklyBarOuter}>
+                    <div
+                      className={styles.weeklyBarInner}
+                      style={{ height }}
+                      title={`${item.totalCalorie} kcal`}
+                    >
+                      <span className={styles.weeklyBarValue}>{item.totalCalorie}</span>
+                    </div>
+                  </div>
+                  <span className={styles.weeklyBarLabel}>{label}</span>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
         <section className={styles.mealsSection}>
           <div className={styles.mealsHeader}>
-            <h2 className={styles.sectionTitle}>今日の食事</h2>
-            <button className={styles.addButton} onClick={() => router.push("/meals/new")}>
-              ＋ 食事を記録する
-            </button>
+            <h2 className={styles.sectionTitle}>食事一覧</h2>
+
+            {/* 日付切り替え */}
+            <div className={styles.dateSelector}>
+              <label className={styles.dateSelectorLabel}>
+                日付
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={handleDateChange}
+                  className={styles.dateInput}
+                />
+              </label>
+              <button className={styles.addButton} onClick={() => router.push("/meals/new")}>
+                ＋ 食事を記録する
+              </button>
+            </div>
           </div>
 
+          {/* 以下、meals のリスト表示 */}
           <div className={styles.mealsList}>
             {loading ? (
               <p className={styles.loading}>読み込み中...</p>
             ) : error ? (
               <p className={styles.error}>{error}</p>
             ) : meals.length === 0 ? (
-              <p className={styles.emptyMessage}>
-                まだ今日の食事は記録されていません。 「＋ 食事を記録する」から追加してみましょう。
-              </p>
+              <p className={styles.emptyMessage}>この日には食事が登録されていません。</p>
             ) : (
               meals.map((meal) => (
                 <article key={meal.id} className={styles.mealCard}>
