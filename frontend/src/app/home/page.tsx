@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
+import WeeklyChart from "./components/WeeklyChart";
 import styles from "./home.module.css";
 
 //  API から返ってくる形に合わせた型
@@ -90,7 +91,7 @@ export default function HomePage() {
   // input[type=date] 用 "YYYY-MM-DD" 文字列を作る
   const toDateInputValue = (d: Date) => d.toISOString().slice(0, 10);
 
-  // 🔹 現在の日時表示（例: "11/27(木) 08:53"）
+  //  現在の日時表示（例: "11/27(木) 08:53"）
   const [nowDateTime, setNowDateTime] = useState("");
 
   // 選択日で食事を取得するヘルパー
@@ -158,7 +159,6 @@ export default function HomePage() {
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <span className={styles.dateLabel}>今日</span>
             <span className={styles.dateValue}>{todayLabel}</span>
-            
           </div>
         </div>
 
@@ -188,38 +188,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className={styles.weeklySection}>
-          <h2 className={styles.sectionTitle}>直近1週間の摂取カロリー</h2>
-
-          <div className={styles.weeklyChart}>
-            {weeklySummary.map((item) => {
-              const d = new Date(item.date);
-              const label = d.toLocaleDateString("ja-JP", {
-                month: "2-digit",
-                day: "2-digit",
-              });
-
-              // 目標 1800kcal を 100% としたバーの高さ（超えたら100%で頭打ち）
-              const ratio = Math.min(item.totalCalorie / 1800, 1);
-              const height = `${ratio * 100}%`;
-
-              return (
-                <div key={item.date} className={styles.weeklyBarItem}>
-                  <div className={styles.weeklyBarOuter}>
-                    <div
-                      className={styles.weeklyBarInner}
-                      style={{ height }}
-                      title={`${item.totalCalorie} kcal`}
-                    >
-                      <span className={styles.weeklyBarValue}>{item.totalCalorie}</span>
-                    </div>
-                  </div>
-                  <span className={styles.weeklyBarLabel}>{label}</span>
-                </div>
-              );
-            })}
-          </div>
-        </section>
+        <WeeklyChart weeklySummary={weeklySummary} />
 
         <section className={styles.mealsSection}>
           <div className={styles.mealsHeader}>
