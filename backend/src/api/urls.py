@@ -4,6 +4,8 @@ from .views import (
     MealTodayListView,
     MealByDateListView,
     MealWeeklySummaryView,
+    MealImageUploadView,
+    MealDetailView,
 )
 
 urlpatterns = [
@@ -14,4 +16,6 @@ urlpatterns = [
     path("meals/today/", MealTodayListView.as_view(), name="meal-today-list"),
     path("meals/by-date/", MealByDateListView.as_view(), name="meal-by-date"),
     path("meals/weekly-summary/", MealWeeklySummaryView.as_view(), name="meal-weekly-summary"),
+    path("meals/<int:meal_id>/image/", MealImageUploadView.as_view(), name="meal-image"),
+    path("meals/<int:pk>/", MealDetailView.as_view(), name="meal-detail"),
 ]

@@ -67,7 +67,7 @@ export default function WeeklyChart({
             yAxisId="right"
             orientation="right"
             domain={[-50, 150]}
-            tickFormatter={(v) => `${v}%`}
+            tickFormatter={(v: number) => `${v}%`}
             tick={{ fontSize: 12 }}
           />
 

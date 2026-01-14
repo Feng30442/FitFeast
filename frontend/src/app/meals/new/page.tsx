@@ -82,7 +82,7 @@ export default function MealCreatePage() {
     setErrors({});
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/api/meals/`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/meals/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

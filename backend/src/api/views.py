@@ -49,7 +49,16 @@ class MealByDateListView(generics.ListAPIView):
         ).order_by("eaten_at")
 
 
-# 直近1週間の合計カロリーを日別に返す
+class MealDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    単体の食事を取得/更新/削除するAPI
+    GET /api/meals/<id>/
+    PATCH /api/meals/<id>/
+    DELETE /api/meals/<id>/
+    """
+    queryset = Meal.objects.all()
+    serializer_class = MealSerializer
+    permission_classes = [permissions.AllowAny]
 class MealWeeklySummaryView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -81,3 +90,23 @@ class MealWeeklySummaryView(APIView):
             )
 
         return Response(data)
+
+
+from rest_framework import status, parsers
+from django.shortcuts import get_object_or_404
+
+
+class MealImageUploadView(APIView):
+    parser_classes = [parsers.MultiPartParser, parsers.FormParser]
+
+    def post(self, request, meal_id: int):
+        meal = get_object_or_404(Meal, pk=meal_id)
+
+        image = request.FILES.get("image")
+        if not image:
+            return Response({"detail": "image is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        meal.image = image
+        meal.save()
+
+        return Response(MealSerializer(meal, context={"request": request}).data, status=status.HTTP_200_OK)

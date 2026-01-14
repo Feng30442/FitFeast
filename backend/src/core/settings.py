@@ -1,14 +1,17 @@
 import os
+from dotenv import load_dotenv
 from pathlib import Path
 from datetime import timedelta
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+load_dotenv(BASE_DIR / ".env")
 
 # .env から渡された環境変数を読む（Docker が設定してくれる）
-SECRET_KEY = os.environ.get("SECRET_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY","")
 JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
 
 DEBUG = True
+
 
 TIME_ZONE = "Asia/Tokyo"
 USE_TZ = True  # True のままでOK
@@ -44,6 +47,9 @@ MIDDLEWARE = [
 ROOT_URLCONF = "core.urls"
 
 STATIC_URL = "/static/"
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 # REST Framework 設定
 REST_FRAMEWORK = {

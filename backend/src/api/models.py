@@ -19,6 +19,11 @@ class Meal(models.Model):
     calorie = models.PositiveIntegerField("カロリー(kcal)")
     tag = models.CharField("タグ", max_length=30)
     created_at = models.DateTimeField("作成日時", auto_now_add=True)
+    image = models.ImageField(
+        upload_to="meals/",
+        null=True,
+        blank=True
+    )
 
     class Meta:
         ordering = ["-eaten_at"]

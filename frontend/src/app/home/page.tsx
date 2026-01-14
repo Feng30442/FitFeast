@@ -12,6 +12,7 @@ type Meal = {
   eatenAt: string; // Django の DateTimeField をそのまま文字列で受け取る
   calorie: number;
   tag: string;
+  image_url: string | null;
 };
 
 type WeeklySummaryItem = {
@@ -94,13 +95,12 @@ export default function HomePage() {
   //  現在の日時表示（例: "11/27(木) 08:53"）
   const [nowDateTime, setNowDateTime] = useState("");
 
-  // 選択日で食事を取得するヘルパー
   async function fetchMealsByDate(dateStr: string) {
     setLoading(true);
     setError(null);
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE}/api/meals/by-date/?date=${dateStr}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/meals/by-date/?date=${dateStr}`,
       );
       if (!res.ok) throw new Error("API error");
       const data: Meal[] = await res.json();
@@ -116,7 +116,7 @@ export default function HomePage() {
   // 週次サマリ取得
   async function fetchWeeklySummary() {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE}/api/meals/weekly-summary/`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/meals/weekly-summary/`);
       if (!res.ok) throw new Error("API error");
       const data: WeeklySummaryItem[] = await res.json();
       setWeeklySummary(data);
@@ -222,13 +222,58 @@ export default function HomePage() {
             ) : (
               meals.map((meal) => (
                 <article key={meal.id} className={styles.mealCard}>
-                  <div className={styles.mealInfo}>
-                    <p className={styles.mealName}>{meal.name}</p>
-                    <p className={styles.mealTime}>{formatDateTime(meal.eatenAt)}</p>
+                  <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                    {/* ✅ 画像 */}
+                    <div
+                      style={{
+                        width: 56,
+                        height: 56,
+                        borderRadius: 12,
+                        overflow: "hidden",
+                        background: "#e5e7eb",
+                      }}
+                    >
+                      {meal.image_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={meal.image_url}
+                          alt={meal.name}
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        />
+                      ) : (
+                        <div
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            display: "grid",
+                            placeItems: "center",
+                            fontSize: 10,
+                            color: "#6b7280",
+                          }}
+                        >
+                          No Image
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 既存情報 */}
+                    <div className={styles.mealInfo}>
+                      <p className={styles.mealName}>{meal.name}</p>
+                      <p className={styles.mealTime}>{formatDateTime(meal.eatenAt)}</p>
+                    </div>
                   </div>
+
                   <div className={styles.mealMeta}>
                     <span className={styles.mealTag}>{meal.tag}</span>
                     <span className={styles.mealCalorie}>{meal.calorie} kcal</span>
+
+                    {/* ✅ 編集へ */}
+                    <button
+                      className={styles.editButton}
+                      onClick={() => router.push(`/meals/${meal.id}/edit`)}
+                    >
+                      編集
+                    </button>
                   </div>
                 </article>
               ))
