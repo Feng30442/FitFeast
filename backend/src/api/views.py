@@ -51,14 +51,17 @@ class MealByDateListView(generics.ListAPIView):
 
 class MealDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
-    単体の食事を取得/更新/削除するAPI
-    GET /api/meals/<id>/
-    PATCH /api/meals/<id>/
-    DELETE /api/meals/<id>/
+    GET    /api/meals/<id>/        : 単体取得
+    PUT    /api/meals/<id>/        : 全更新
+    PATCH  /api/meals/<id>/        : 部分更新（おすすめ）
+    DELETE /api/meals/<id>/        : 削除
     """
     queryset = Meal.objects.all()
     serializer_class = MealSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.AllowAny]  # いまは開発用
+
+    # もしURLが pk じゃなく meal_id 等ならこれを使う：
+    # lookup_url_kwarg = "meal_id"
 class MealWeeklySummaryView(APIView):
     permission_classes = [permissions.AllowAny]
 

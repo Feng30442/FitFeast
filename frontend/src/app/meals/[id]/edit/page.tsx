@@ -201,15 +201,37 @@ export default function MealEditPage() {
               </div>
 
               <div className={styles.actions}>
-                <button className={styles.primaryBtn} onClick={handleSubmit} disabled={saving}>
+                {/* 保存 */}
+                <button type="submit" className={styles.primaryBtn} disabled={saving}>
                   保存
                 </button>
+
+                {/* 删除 */}
                 <button
                   type="button"
-                  className={styles.secondaryBtn}
-                  onClick={() => router.push("/home")}
+                  className={styles.deleteBtn}
+                  onClick={async () => {
+                    if (!confirm("この食事を削除しますか？")) return;
+
+                    const base = process.env.NEXT_PUBLIC_API_BASE_URL;
+                    if (!base) {
+                      alert("API base URL is not defined");
+                      return;
+                    }
+
+                    const res = await fetch(`${base}/meals/${meal.id}/`, {
+                      method: "DELETE",
+                    });
+
+                    if (!res.ok) {
+                      alert(`削除に失敗しました (${res.status})`);
+                      return;
+                    }
+
+                    router.push("/home");
+                  }}
                 >
-                  キャンセル
+                  削除
                 </button>
               </div>
             </div>

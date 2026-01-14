@@ -265,3 +265,17 @@
 .secondaryBtn:hover {
   background: #eceef1;
 }
+
+.deleteBtn {
+  padding: 12px 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(220, 38, 38, 0.5);
+  background: #fff;
+  color: #dc2626;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.deleteBtn:hover {
+  background: rgba(220, 38, 38, 0.06);
+}
