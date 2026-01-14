@@ -1,67 +1,97 @@
 "use client";
 
-import { useState } from "react";
-import { uploadMealImage } from "@/lib/api/meals"; // 你放 API 的地方
+import { uploadMealImage } from "@/lib/api/meals";
+import { useEffect, useState } from "react";
+import styles from "./MealImageUploader.module.css";
+
+type Uploaded =
+  | { id: number; imageUrl: string } // 前端自定义返回
+  | { id: number; image_url: string }; // Django serializer 常见返回
 
 type Props = {
   mealId: number;
-  imageUrl: string | null;
-  onUploaded: (updated: { id: number; imageUrl: string }) => void;
+  imageUrl: string | null; // 现在数据库里已有的图片URL
+  onUploaded: (updated: Uploaded) => void;
 };
 
-export default function MealImageUploader({
-  mealId,
-  imageUrl,
-  onUploaded,
-}: Props) {
+export default function MealImageUploader({ mealId, imageUrl, onUploaded }: Props) {
   const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // 选择文件 => 生成预览
+  const onPickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0] ?? null;
+    setFile(f);
+
+    if (f) {
+      const url = URL.createObjectURL(f);
+      setPreviewUrl(url);
+    } else {
+      setPreviewUrl(null);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
+  const onUpload = async () => {
+    if (!file) return;
+
+    setLoading(true);
+    try {
+      const updated = await uploadMealImage(mealId, file);
+      onUploaded(updated);
+
+      // 清理
+      setFile(null);
+      setPreviewUrl(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const shownImage = previewUrl ?? imageUrl;
+
   return (
-    <div className="flex gap-4 items-center">
-      <div className="h-28 w-28 rounded-lg bg-gray-200 overflow-hidden grid place-items-center">
-        {preview || imageUrl ? (
+    <div className={styles.wrap}>
+      <div className={styles.thumb}>
+        {shownImage ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={preview ?? imageUrl ?? ""}
-            className="h-full w-full object-cover"
-          />
+          <img src={shownImage} alt="meal image" className={styles.thumbImg} />
         ) : (
-          <span className="text-xs text-gray-500">No Image</span>
+          <span className={styles.noImage}>No Image</span>
         )}
       </div>
 
-      <div className="flex flex-col gap-2">
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => {
-            const f = e.target.files?.[0] ?? null;
-            setFile(f);
-            setPreview(f ? URL.createObjectURL(f) : null);
-          }}
-        />
+      <div className={styles.row}>
+        <label className={styles.fileBtn}>
+          📷 画像を選択
+          <input
+            className={styles.hiddenInput}
+            type="file"
+            accept="image/*"
+            onChange={onPickFile}
+            disabled={loading}
+          />
+        </label>
+
+        <span className={styles.fileName}>{file ? file.name : "アップロードしました"}</span>
 
         <button
+          type="button"
+          className={styles.uploadBtn}
           disabled={!file || loading}
-          className="px-4 py-2 rounded bg-black text-white disabled:opacity-50"
-          onClick={async () => {
-            if (!file) return;
-            setLoading(true);
-            try {
-              const updated = await uploadMealImage(mealId, file);
-              onUploaded(updated);
-              setFile(null);
-              setPreview(null);
-            } finally {
-              setLoading(false);
-            }
-          }}
+          onClick={onUpload}
         >
           {loading ? "Uploading..." : "Upload"}
         </button>
       </div>
+
+      <p className={styles.note}>※ JPG / PNG 推奨。アップロード後すぐ反映されます。</p>
     </div>
   );
 }

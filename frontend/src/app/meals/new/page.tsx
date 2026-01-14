@@ -1,6 +1,7 @@
 // src/app/meals/new/page.tsx
 "use client";
 
+import { uploadMealImage } from "@/lib/api/meals";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import styles from "./page.module.css";
@@ -32,6 +33,9 @@ export default function MealCreatePage() {
 
   const [errors, setErrors] = useState<FormErrorState>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   // 入力値変更ハンドラ
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -112,9 +116,20 @@ export default function MealCreatePage() {
         return;
       }
 
-      // 成功したらホームへ遷移
-      // 例：一覧ページが /home の場合
+      const created = await res.json(); // created.id 需要后端返回
+
+      if (imageFile) {
+        try {
+          await uploadMealImage(created.id, imageFile);
+        } catch (e) {
+          console.error(e);
+          // 这里可以不阻止跳转，只提示
+          // setErrors({ general: "画像のアップロードに失敗しました（食事は登録済み）" });
+        }
+      }
+
       router.push("/home");
+      return;
     } catch (error) {
       console.error(error);
       setErrors({
@@ -204,6 +219,31 @@ export default function MealCreatePage() {
               <option value="外食">外食</option>
             </select>
             {errors.tag && <p className={styles.error}>{errors.tag}</p>}
+          </div>
+
+          {/* 画像 */}
+          <div className={styles.field}>
+            <label className={styles.label}>画像（任意）</label>
+
+            {/* 预览 */}
+            <div className={styles.imageBox}>
+              {imagePreview ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={imagePreview} className={styles.imagePreview} alt="preview" />
+              ) : (
+                <div className={styles.imagePlaceholder}>No Image</div>
+              )}
+            </div>
+
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const f = e.target.files?.[0] ?? null;
+                setImageFile(f);
+                setImagePreview(f ? URL.createObjectURL(f) : null);
+              }}
+            />
           </div>
 
           {/* ボタン */}

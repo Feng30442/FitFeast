@@ -266,8 +266,6 @@ export default function HomePage() {
                   <div className={styles.mealMeta}>
                     <span className={styles.mealTag}>{meal.tag}</span>
                     <span className={styles.mealCalorie}>{meal.calorie} kcal</span>
-
-                    {/* ✅ 編集へ */}
                     <button
                       className={styles.editButton}
                       onClick={() => router.push(`/meals/${meal.id}/edit`)}
