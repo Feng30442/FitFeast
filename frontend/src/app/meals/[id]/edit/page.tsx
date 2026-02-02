@@ -39,7 +39,7 @@ export default function MealEditPage() {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch(`${base}/meals/${mealId}/`);
+        const res = await fetch(`${base}/api/meals/${mealId}/`);
         if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
         const data = await res.json();
 
@@ -63,7 +63,7 @@ export default function MealEditPage() {
       const base = process.env.NEXT_PUBLIC_API_BASE_URL;
       if (!base) throw new Error("API base URL not defined");
 
-      const res = await fetch(`${base}/meals/${meal.id}/`, {
+      const res = await fetch(`${base}/api/meals/${meal.id}/`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -219,7 +219,7 @@ export default function MealEditPage() {
                       return;
                     }
 
-                    const res = await fetch(`${base}/meals/${meal.id}/`, {
+                    const res = await fetch(`${base}/api/meals/${meal.id}/`, {
                       method: "DELETE",
                     });
 

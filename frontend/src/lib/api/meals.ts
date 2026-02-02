@@ -5,10 +5,9 @@ export async function uploadMealImage(mealId: number, file: File) {
   const form = new FormData();
   form.append("image", file);
 
-  const res = await fetch(`${base}/meals/${mealId}/image/`, {
+  const res = await fetch(`${base}/api/meals/${mealId}/image/`, {
     method: "POST",
     body: form,
-
   });
 
   if (!res.ok) {

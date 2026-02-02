@@ -1,8 +1,10 @@
 "use client";
 
+import { useMemo } from "react";
 import {
   Bar,
   CartesianGrid,
+  Cell,
   ComposedChart,
   LabelList,
   Line,
@@ -13,98 +15,149 @@ import {
 } from "recharts";
 
 type WeeklySummaryItem = {
-  date: string;
+  date: string; // "YYYY-MM-DD"
   totalCalorie: number;
 };
 
-export default function WeeklyChart({
-  weeklySummary,
-}: {
-  weeklySummary: WeeklySummaryItem[];
-}) {
-  // ---- データ整形（グラフ用） ----
-  const chartData = weeklySummary.map((item, idx) => {
-    const d = new Date(item.date);
-    const label = `${d.getMonth() + 1}/${d.getDate()}`;
+type ChartRow = {
+  date: string;        // "M/D"
+  calorie: number;     // kcal
+  achieve: number;     // グラフ表示用 達成率（0〜150にclamp）
+  achieveRaw: number;  // Tooltip表示用 達成率（実値）
+  barColor: string;    // 超标红色，否则绿色
+};
 
-    const prev = weeklySummary[idx - 1]?.totalCalorie ?? 0;
+function toMD(isoDate: string) {
+  const d = new Date(isoDate);
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+}
 
-    let ratio = 0;
-    if (idx > 0 && prev > 0) {
-      ratio = ((item.totalCalorie - prev) / prev) * 100;
-    }
-    if (isNaN(ratio)) ratio = 0;
+function clamp(n: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, n));
+}
 
-    return {
-      date: label,
-      calorie: item.totalCalorie ?? 0,
-      ratio: Number(ratio.toFixed(1)),
-    };
-  });
+export default function WeeklyChart({ weeklySummary }: { weeklySummary: WeeklySummaryItem[] }) {
+  const TARGET = 1800;
+  const DOMAIN_MIN = 0;
+  const DOMAIN_MAX = 150;
+
+  const chartData: ChartRow[] = useMemo(() => {
+    return weeklySummary.map((item) => {
+      const calorie = item.totalCalorie ?? 0;
+
+      // ✅ 達成率（%）: calorie / TARGET * 100
+      const achieveRaw = TARGET > 0 ? Number(((calorie / TARGET) * 100).toFixed(1)) : 0;
+
+      // ✅ 見た目用：0〜150% に抑える（グラフが破綻しない）
+      const achieve = clamp(achieveRaw, DOMAIN_MIN, DOMAIN_MAX);
+
+      return {
+        date: toMD(item.date),
+        calorie,
+        achieve,
+        achieveRaw,
+        barColor: calorie > TARGET ? "#ef4444" : "#4CAF50",
+      };
+    });
+  }, [weeklySummary]);
 
   return (
-    <div style={{ width: "100%", height: 360, marginTop: 25 }}>
+    <div style={{ width: "100%", height: "100%" }}>
       <ResponsiveContainer>
-        <ComposedChart
-          data={chartData}
-          margin={{ top: 30, right: 40, bottom: 10, left: 0 }}
-        >
-          {/* 背景グリッド */}
+        <ComposedChart data={chartData} margin={{ top: 44, right: 28, bottom: 8, left: 0 }}>
           <CartesianGrid stroke="#e6e6e6" strokeDasharray="3 3" />
-
-          {/* X軸（日付） */}
           <XAxis dataKey="date" tick={{ fontSize: 12 }} />
 
-          {/* 左軸：カロリー（目安 0〜3500） */}
-          <YAxis
-            yAxisId="left"
-            tick={{ fontSize: 12 }}
-            domain={[0, "auto"]}
-          />
+          {/* 左：kcal */}
+          <YAxis yAxisId="left" tick={{ fontSize: 12 }} domain={[0, "auto"]} />
 
-          {/* 右軸：割合（%） */}
+          {/* 右：達成率(%) */}
           <YAxis
             yAxisId="right"
             orientation="right"
-            domain={[-50, 150]}
+            domain={[DOMAIN_MIN, DOMAIN_MAX]}
             tickFormatter={(v: number) => `${v}%`}
             tick={{ fontSize: 12 }}
           />
 
+          {/* ✅ Tooltip：達成率 + 超標提示 */}
           <Tooltip
-            formatter={(value, name) =>
-              name === "calorie" ? `${value} kcal` : `${value}%`
-            }
+            content={({ active, payload, label }) => {
+              if (!active || !payload || !payload.length) return null;
+
+              const calorie = payload.find((p) => p.dataKey === "calorie")?.value;
+              const row = payload[0]?.payload as ChartRow | undefined;
+              const achieveRaw = row?.achieveRaw;
+
+              const over = typeof calorie === "number" ? calorie - TARGET : null;
+
+              return (
+                <div
+                  style={{
+                    background: "#fff",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: 12,
+                    padding: "10px 12px",
+                    fontSize: 12,
+                    lineHeight: 1.6,
+                    boxShadow: "0 10px 24px rgba(0,0,0,.08)",
+                  }}
+                >
+                  <div>
+                    <b>日付：</b>
+                    {label}
+                  </div>
+
+                  <div style={{ color: "#16a34a" }}>
+                    <b>カロリー：</b>
+                    {calorie} kcal
+                  </div>
+
+                  {typeof achieveRaw === "number" && (
+                    <div style={{ color: "#ff6f00" }}>
+                      <b>達成率：</b>
+                      {achieveRaw > DOMAIN_MAX ? `>${DOMAIN_MAX}%` : `${achieveRaw}%`}
+                      {achieveRaw > DOMAIN_MAX && (
+                        <span style={{ color: "#9ca3af" }}>（実際 {achieveRaw}%）</span>
+                      )}
+                    </div>
+                  )}
+
+                  {typeof calorie === "number" && over != null && over > 0 && (
+                    <div style={{ color: "#ef4444" }}>
+                      <b>注意：</b> 目標より +{over} kcal
+                    </div>
+                  )}
+                </div>
+              );
+            }}
           />
 
-          {/* 棒グラフ（kcal） */}
-          <Bar
-            yAxisId="left"
-            dataKey="calorie"
-            fill="#4CAF50"
-            barSize={40}
-            radius={[8, 8, 0, 0]}
-          >
-            <LabelList dataKey="calorie" position="top" fill="#333" />
+          {/* 柱：kcal（超标红/未超标绿） */}
+          <Bar yAxisId="left" dataKey="calorie" barSize={34} radius={[8, 8, 0, 0]}>
+            {chartData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.barColor} />
+            ))}
+            <LabelList
+              dataKey="calorie"
+              position="top"
+              offset={8}
+              fill="#333"
+              formatter={(v: any) => (Number(v) > 0 ? `${v}` : "")}
+            />
           </Bar>
 
-          {/* 折れ線（前日比%） */}
+          {/* ✅ 橙线：達成率(%)（hover で Tooltip に出る） */}
           <Line
             yAxisId="right"
             type="monotone"
-            dataKey="ratio"
+            dataKey="achieve"
             stroke="#FF6F00"
             strokeWidth={3}
-            dot={{ r: 5 }}
+            dot={{ r: 4 }}
             activeDot={{ r: 6 }}
-          >
-            <LabelList
-              dataKey="ratio"
-              position="top"
-              formatter={(v) => `${v}%`}
-              fill="#FF6F00"
-            />
-          </Line>
+            connectNulls={false}
+          />
         </ComposedChart>
       </ResponsiveContainer>
     </div>

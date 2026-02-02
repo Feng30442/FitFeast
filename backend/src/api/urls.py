@@ -4,18 +4,20 @@ from .views import (
     MealTodayListView,
     MealByDateListView,
     MealWeeklySummaryView,
-    MealImageUploadView,
     MealDetailView,
+    MealImageUploadView,
+    MealAiParseView,   # 👈 新增
 )
 
 urlpatterns = [
-    # 認証系は今は使わないので、追加していなければ何も書かなくてOK
-    # auth の行を入れるなら、実際に views にあるものだけを書くこと
-
+    # 既存 Meal API
     path("meals/", MealCreateView.as_view(), name="meal-create"),
     path("meals/today/", MealTodayListView.as_view(), name="meal-today-list"),
     path("meals/by-date/", MealByDateListView.as_view(), name="meal-by-date"),
     path("meals/weekly-summary/", MealWeeklySummaryView.as_view(), name="meal-weekly-summary"),
-    path("meals/<int:meal_id>/image/", MealImageUploadView.as_view(), name="meal-image"),
     path("meals/<int:pk>/", MealDetailView.as_view(), name="meal-detail"),
+    path("meals/<int:meal_id>/image/", MealImageUploadView.as_view(), name="meal-image"),
+
+    # ✅ AI 解析（新增）
+    path("ai/parse-meal", MealAiParseView.as_view(), name="ai-parse-meal"),
 ]

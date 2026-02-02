@@ -3,7 +3,7 @@
 
 import { uploadMealImage } from "@/lib/api/meals";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import styles from "./page.module.css";
 
 type MealFormState = {
@@ -36,6 +36,67 @@ export default function MealCreatePage() {
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  // AI 解析用 state
+  const [aiText, setAiText] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  // デフォルト eatenAt を現在（クライアント時間、JST）に設定
+  useEffect(() => {
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const v = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(
+      now.getHours(),
+    )}:${pad(now.getMinutes())}`;
+
+    setForm((prev) => ({ ...prev, eatenAt: v })); // ✅ 強制上書き
+  }, []);
+
+  // 日本現在時間を datetime-local 形式で取得
+  function getNowForDatetimeLocal() {
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(
+      now.getHours(),
+    )}:${pad(now.getMinutes())}`;
+  }
+
+  // AI に送ってフォームへ回填（✅ 解析时自动填「现在时间」）
+  const handleAiParse = async () => {
+    if (!aiText.trim()) return;
+
+    setAiLoading(true);
+    setAiError(null);
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/ai/parse-meal`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: aiText }),
+      });
+
+      const text = await res.text();
+      if (!res.ok) throw new Error(text.slice(0, 120));
+
+      const data = JSON.parse(text);
+
+      // ✅ 这里统一设置「现在时间（日本）」
+      const nowValue = getNowForDatetimeLocal();
+
+      setForm((prev) => ({
+        ...prev,
+        name: data.name ?? prev.name,
+        calorie: data.calorie != null ? String(data.calorie) : prev.calorie,
+        tag: data.tag ?? prev.tag,
+        eatenAt: nowValue, // ⭐ 关键：AI解析时自动填现在
+      }));
+    } catch (e: unknown) {
+      setAiError(e instanceof Error ? e.message : "AI error");
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   // 入力値変更ハンドラ
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -86,7 +147,7 @@ export default function MealCreatePage() {
     setErrors({});
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/meals/`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/meals/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -128,7 +189,8 @@ export default function MealCreatePage() {
         }
       }
 
-      router.push("/home");
+      const dateStr = (form.eatenAt || new Date().toISOString()).slice(0, 10);
+      router.push(`/home?date=${dateStr}&toast=registered`);
       return;
     } catch (error) {
       console.error(error);
@@ -146,6 +208,27 @@ export default function MealCreatePage() {
         <p className={styles.description}>その日の食事内容とカロリーを記録しましょう。</p>
 
         {errors.general && <div className={styles.errorGeneral}>{errors.general}</div>}
+
+        {/* AI 解析ブロック（最短） */}
+        <div className={styles.aiBox}>
+          <label className={styles.aiLabel}>AIで食事を解析</label>
+          <textarea
+            className={styles.aiTextarea}
+            value={aiText}
+            onChange={(e) => setAiText(e.target.value)}
+            placeholder="例：牛丼 大盛 + 味噌汤"
+            rows={3}
+          />
+          <button
+            type="button"
+            className={styles.aiButton}
+            onClick={handleAiParse}
+            disabled={aiLoading || !aiText.trim()}
+          >
+            {aiLoading ? "解析中..." : "AI解析して入力に反映"}
+          </button>
+          {aiError && <p className={styles.aiError}>{aiError}</p>}
+        </div>
 
         <form className={styles.form} onSubmit={handleSubmit} noValidate>
           {/* 食事名 */}

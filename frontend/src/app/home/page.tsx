@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import WeeklyChart from "./components/WeeklyChart";
 import styles from "./home.module.css";
@@ -22,6 +22,7 @@ type WeeklySummaryItem = {
 
 export default function HomePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // 🔹 食事一覧と状態
   const [meals, setMeals] = useState<Meal[]>([]);
@@ -33,6 +34,7 @@ export default function HomePage() {
 
   // 🔹 追加：1週間のサマリ
   const [weeklySummary, setWeeklySummary] = useState<WeeklySummaryItem[]>([]);
+  const [toast, setToast] = useState<string | null>(null);
 
   function handleLogout() {
     // いまはフロント側だけでログアウト
@@ -46,6 +48,8 @@ export default function HomePage() {
   const target = 1800;
   const remain = target - todayTotal;
 
+  const progress = Math.min(100, Math.max(0, Math.round((todayTotal / target) * 100)));
+
   // 🔹 今日の日付（クライアントでマウント後に計算）
   const [todayLabel, setTodayLabel] = useState("");
 
@@ -57,16 +61,35 @@ export default function HomePage() {
       weekday: "short",
     });
     setTodayLabel(label);
-    // 初期の選択日を今日にしておく（Hydration 対策で useEffect 内で決める）
-    const todayStr = toDateInputValue(now);
-    setSelectedDate(todayStr);
-    // 今の日時（表示用）をセット
+
+    const queryDate = searchParams.get("date");
+    const initDate = queryDate ?? toDateInputValue(now);
+
+    setSelectedDate(initDate);
     setNowDateTime(formatDateTime(now.toISOString()));
 
-    // 初回マウント時に選択日に合わせて食事を取得し、週次サマリも取得
-    fetchMealsByDate(todayStr);
+    fetchMealsByDate(initDate);
     fetchWeeklySummary();
+
+    if (queryDate) {
+      // URL をクリーンにして、次回は必ず「今日」に戻す
+      router.replace("/home");
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // toast from query (e.g. after registering)
+  useEffect(() => {
+    const toastType = searchParams.get("toast");
+    const date = searchParams.get("date");
+
+    if (toastType === "registered") {
+      setToast(`${(date ?? "").replaceAll("-", "/")} の食事を登録しました 🍽️`);
+      const t = setTimeout(() => setToast(null), 2500);
+      return () => clearTimeout(t);
+    }
+  }, [searchParams]);
 
   // eaten_at を「HH:MM 朝食」みたいな表示に変換したい場合のヘルパー
   const formatTime = (iso: string) => {
@@ -100,7 +123,7 @@ export default function HomePage() {
     setError(null);
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/meals/by-date/?date=${dateStr}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/meals/by-date/?date=${dateStr}`,
       );
       if (!res.ok) throw new Error("API error");
       const data: Meal[] = await res.json();
@@ -116,7 +139,7 @@ export default function HomePage() {
   // 週次サマリ取得
   async function fetchWeeklySummary() {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/meals/weekly-summary/`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/meals/weekly-summary/`);
       if (!res.ok) throw new Error("API error");
       const data: WeeklySummaryItem[] = await res.json();
       setWeeklySummary(data);
@@ -132,6 +155,27 @@ export default function HomePage() {
       fetchMealsByDate(value);
     }
   };
+
+  // ② 最近 3 条记录
+  const recentMeals = meals
+    .slice()
+    .sort((a, b) => new Date(b.eatenAt).getTime() - new Date(a.eatenAt).getTime())
+    .slice(0, 3);
+
+  // ③ 本周最高/平均
+  const weekTotals = weeklySummary.map((w) => w.totalCalorie);
+  const weekMax = weekTotals.length ? Math.max(...weekTotals) : 0;
+  const weekAvg = weekTotals.length
+    ? Math.round(weekTotals.reduce((s, n) => s + n, 0) / weekTotals.length)
+    : 0;
+
+  function getAiMessage(todayTotal: number, target: number, mealsCount: number) {
+    if (mealsCount === 0) return "まだ食事が登録されていません。まずは1食から記録してみましょう 🍽️";
+    if (todayTotal < target * 0.5)
+      return `いい調子です！あと${target - todayTotal}kcal目安で、バランス良くいきましょう 🌿`;
+    if (todayTotal <= target) return "順調です！タンパク質＋野菜を意識するとさらに良いですよ 💪";
+    return "今日は少しオーバー気味。次の食事は野菜多め・揚げ物控えめで調整しましょう 🥗";
+  }
 
   return (
     <div className={styles.wrapper}>
@@ -154,6 +198,7 @@ export default function HomePage() {
 
       {/* メイン */}
       <main className={styles.main}>
+        {toast && <div className={styles.toast}>{toast}</div>}
         {/* 日付表示 */}
         <div className={styles.dateRow}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -183,16 +228,89 @@ export default function HomePage() {
           <div className={styles.summaryCard}>
             <p className={styles.summaryLabel}>AI からの一言</p>
             <p className={styles.summaryMessage}>
-              今日は脂質を少し控えめにして、 野菜をもう一品追加してみましょう 🌿
+              {getAiMessage(todayTotal, target, meals.length)}
             </p>
           </div>
         </section>
 
-        <WeeklyChart weeklySummary={weeklySummary} />
+        {/* ✅ 今日进度 + 今週サマリ + 最近の食事 */}
+        <section className={styles.insightsSection}>
+          {/* 今日の進捗 */}
+          <div className={styles.insightCard}>
+            <div className={styles.insightHeader}>
+              <p className={styles.insightTitle}>今日の進捗</p>
+              <p className={styles.insightValue}>{progress}%</p>
+            </div>
+
+            <div className={styles.progressTrack}>
+              <div className={styles.progressFill} style={{ width: `${progress}%` }} />
+            </div>
+
+            <p className={styles.insightSub}>
+              {todayTotal} / {target} kcal（残り {remain >= 0 ? remain : `+${Math.abs(remain)}`}{" "}
+              kcal）
+            </p>
+          </div>
+
+          {/* 今週の統計 */}
+          <div className={styles.insightCard}>
+            <p className={styles.insightTitle}>今週のサマリ</p>
+            <div className={styles.weekGrid}>
+              <div className={styles.weekItem}>
+                <p className={styles.weekLabel}>平均</p>
+                <p className={styles.weekNumber}>{weekAvg} kcal</p>
+              </div>
+              <div className={styles.weekItem}>
+                <p className={styles.weekLabel}>最高</p>
+                <p className={styles.weekNumber}>{weekMax} kcal</p>
+              </div>
+            </div>
+            <p className={styles.insightSub}>直近7日間の合計カロリーから計算しています。</p>
+          </div>
+
+          {/* 最近の食事 */}
+          <div className={styles.insightCard}>
+            <p className={styles.insightTitle}>最近の食事（最新3件）</p>
+
+            {recentMeals.length === 0 ? (
+              <p className={styles.insightSub}>まだ食事がありません。</p>
+            ) : (
+              <div className={styles.recentList}>
+                {recentMeals.map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    className={styles.recentItem}
+                    onClick={() => router.push(`/meals/${m.id}/edit`)}
+                  >
+                    <div className={styles.recentLeft}>
+                      <p className={styles.recentName}>{m.name}</p>
+                      <p className={styles.recentTime}>{formatDateTime(m.eatenAt)}</p>
+                    </div>
+                    <div className={styles.recentRight}>
+                      <span className={styles.recentKcal}>{m.calorie} kcal</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section className={styles.chartCard}>
+          <div className={styles.chartBox}>
+            <WeeklyChart weeklySummary={weeklySummary} />
+          </div>
+        </section>
 
         <section className={styles.mealsSection}>
           <div className={styles.mealsHeader}>
-            <h2 className={styles.sectionTitle}>食事一覧</h2>
+            <div className={styles.titleRow}>
+              <h2 className={styles.sectionTitle}>食事一覧</h2>
+              <span className={styles.showingDate}>
+                現在表示：{selectedDate ? selectedDate.replaceAll("-", "/") : "—"}
+              </span>
+            </div>
 
             {/* 日付切り替え */}
             <div className={styles.dateSelector}>
