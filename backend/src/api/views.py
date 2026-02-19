@@ -2,7 +2,7 @@
 from rest_framework import generics, permissions
 from django.utils import timezone
 from .models import Meal
-from .serializers import MealSerializer
+from .serializers import MealSerializer, CalorieGoalSerializer
 from datetime import datetime, timedelta
 from django.utils import timezone as dj_timezone
 from django.db.models import Sum
@@ -104,6 +104,25 @@ class MealWeeklySummaryView(APIView):
 
 from rest_framework import status, parsers
 from django.shortcuts import get_object_or_404
+
+
+class CalorieGoalView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        profile = request.user.profile
+        serializer = CalorieGoalSerializer(profile)
+        return Response(serializer.data)
+
+    def patch(self, request):
+        print("PATCH data:", request.data)  # 追加
+        profile = request.user.profile
+        serializer = CalorieGoalSerializer(profile, data=request.data, partial=True)
+        if not serializer.is_valid():
+            print("serializer errors:", serializer.errors)  # 追加
+            return Response(serializer.errors, status=400)
+        serializer.save()
+        return Response(serializer.data, status=200)
 
 
 class MealImageUploadView(APIView):

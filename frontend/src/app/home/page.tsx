@@ -44,8 +44,8 @@ export default function HomePage() {
   // (初期データ取得はマウント時の別 useEffect で行う)
 
   // 🔹 今日の合計 / 残り
+  const [target, setTarget] = useState<number>(1800);
   const todayTotal = meals.reduce((sum, m) => sum + m.calorie, 0);
-  const target = 1800;
   const remain = target - todayTotal;
 
   const progress = Math.min(100, Math.max(0, Math.round((todayTotal / target) * 100)));
@@ -70,6 +70,7 @@ export default function HomePage() {
 
     fetchMealsByDate(initDate);
     fetchWeeklySummary();
+    fetchGoal();
 
     if (queryDate) {
       // URL をクリーンにして、次回は必ず「今日」に戻す
@@ -148,6 +149,30 @@ export default function HomePage() {
     }
   }
 
+  // 目標カロリー取得
+  async function fetchGoal() {
+    try {
+      const token = localStorage.getItem("access_token");
+      console.log("access_token:", token); // ★ まずここ重要
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/profile/goal/`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        console.log("goal status:", res.status);
+        console.log("goal body:", text);
+        throw new Error("goal api error");
+      }
+
+      const data = await res.json();
+      setTarget(data.daily_calorie_goal ?? 1800);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSelectedDate(value);
@@ -190,6 +215,9 @@ export default function HomePage() {
 
         <div className={styles.userArea}>
           <span className={styles.userName}>こんにちは、ユーザーさん</span>
+          <button className={styles.logoutButton} onClick={() => router.push("/settings")}>
+            ⚙️ 目標設定
+          </button>
           <button className={styles.logoutButton} onClick={handleLogout}>
             ログアウト
           </button>

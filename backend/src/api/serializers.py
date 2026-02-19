@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Meal
+from .models import Meal, Profile
 
 
 class MealSerializer(serializers.ModelSerializer):
@@ -26,3 +26,9 @@ class MealSerializer(serializers.ModelSerializer):
             return None
         url = obj.image.url
         return request.build_absolute_uri(url) if request else url
+
+
+class CalorieGoalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ["daily_calorie_goal"]

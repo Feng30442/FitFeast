@@ -7,6 +7,7 @@ from .views import (
     MealDetailView,
     MealImageUploadView,
     MealAiParseView,   # 👈 新增
+    CalorieGoalView,
 )
 
 urlpatterns = [
@@ -20,4 +21,5 @@ urlpatterns = [
 
     # ✅ AI 解析（新增）
     path("ai/parse-meal", MealAiParseView.as_view(), name="ai-parse-meal"),
-]
+    # ✅ Profile API
+    path("profile/goal/", CalorieGoalView.as_view(), name="profile-goal"),]

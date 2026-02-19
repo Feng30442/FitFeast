@@ -1,0 +1,322 @@
+.wrapper {
+  min-height: 100vh;
+  background: #f3f6f4; /* Homeと近い淡色 */
+}
+
+.header {
+  height: 64px;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffffcc;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(15, 118, 110, 0.08);
+}
+
+.logoArea {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.logoCircle {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: #0f766e;
+  display: grid;
+  place-items: center;
+}
+
+.logoLeaf {
+  color: #fff;
+}
+
+.appName {
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: #0f766e;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.backBtn {
+  border: 1px solid rgba(15, 118, 110, 0.2);
+  background: #fff;
+  padding: 8px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  color: #0f766e;
+  font-weight: 700;
+}
+
+.main {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 18px;
+}
+
+.toast {
+  position: sticky;
+  top: 12px;
+  margin: 0 auto 12px auto;
+  width: fit-content;
+  background: #111827;
+  color: white;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  box-shadow: 0 10px 30px rgba(17, 24, 39, 0.2);
+  z-index: 10;
+}
+
+.titleRow {
+  margin-top: 6px;
+  margin-bottom: 14px;
+}
+
+.title {
+  margin: 0;
+  font-size: 26px;
+}
+
+.subtitle {
+  margin: 6px 0 0 0;
+  color: #6b7280;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+@media (max-width: 860px) {
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  background: white;
+  border-radius: 18px;
+  padding: 16px;
+  border: 1px solid rgba(15, 118, 110, 0.08);
+  box-shadow: 0 10px 30px rgba(15, 118, 110, 0.06);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.cardTitle {
+  margin: 0;
+  font-weight: 800;
+  color: #111827;
+}
+
+.cardDesc {
+  margin: 0;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.badge {
+  background: rgba(15, 118, 110, 0.12);
+  color: #0f766e;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.bigNumber {
+  margin-top: 10px;
+  font-size: 34px;
+  font-weight: 900;
+  color: #111827;
+}
+
+.unit {
+  margin-left: 8px;
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 700;
+}
+
+.miniStats {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.statItem {
+  background: #f9fafb;
+  border: 1px solid #eef2f7;
+  padding: 10px;
+  border-radius: 14px;
+}
+
+.statLabel {
+  margin: 0;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.statValue {
+  margin: 6px 0 0 0;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.primaryBtn {
+  margin-top: 12px;
+  width: 100%;
+  border: none;
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: #0f766e;
+  color: white;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.note {
+  margin: 10px 0 0 0;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.goalRow {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.goalInput {
+  width: 100%;
+  font-size: 28px;
+  font-weight: 900;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  outline: none;
+}
+
+.goalInput:focus {
+  border-color: rgba(15, 118, 110, 0.6);
+  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+}
+
+.goalUnit {
+  color: #6b7280;
+  font-weight: 800;
+}
+
+.subText {
+  margin: 8px 0 0 0;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.hint {
+  margin-top: 10px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #9a3412;
+  padding: 10px 12px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.darkBtn {
+  margin-top: 12px;
+  width: 100%;
+  border: none;
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: #111827;
+  color: white;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.darkBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.formGrid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 860px) {
+  .formGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.label {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 800;
+}
+
+.input,
+.select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  outline: none;
+  background: white;
+}
+
+.input:focus,
+.select:focus {
+  border-color: rgba(15, 118, 110, 0.6);
+  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+}
+
+.inputWithUnit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.unitChip {
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  color: #111827;
+  font-weight: 800;
+  font-size: 12px;
+}
